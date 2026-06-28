@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kit Comp Generator</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <script src="taskpane.js" defer></script>
+  <style>
+    /* ── Reset & base ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:    #1F4E79;
+      --blue:    #2E75B6;
+      --sky:     #BDD7EE;
+      --yellow:  #FFFCE5;
+      --green:   #C6EFCE;
+      --red:     #FFC7CE;
+      --amber:   #FFEB9C;
+      --grey-1:  #F5F7FA;
+      --grey-2:  #E8ECF0;
+      --grey-3:  #BCC5CE;
+      --grey-4:  #6B7785;
+      --text:    #1A2533;
+      --radius:  6px;
+      --shadow:  0 1px 4px rgba(0,0,0,.10);
+    }
+
+    body {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--grey-1);
+      min-height: 100vh;
+    }
+
+    /* ── Header ───────────────────────────────────────────── */
+    .header {
+      background: var(--navy);
+      color: #fff;
+      padding: 14px 16px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-icon {
+      width: 28px; height: 28px;
+      background: var(--blue);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; flex-shrink: 0;
+    }
+    .header h1 { font-size: 14px; font-weight: 600; letter-spacing: .3px; }
+    .header p  { font-size: 11px; opacity: .75; margin-top: 1px; }
+
+    /* ── Steps ────────────────────────────────────────────── */
+    .steps { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+
+    .step {
+      background: #fff;
+      border: 1px solid var(--grey-2);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .step-header {
+      background: var(--blue);
+      color: #fff;
+      padding: 7px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .step-num {
+      background: rgba(255,255,255,.25);
+      border-radius: 50%;
+      width: 18px; height: 18px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 800; flex-shrink: 0;
+    }
+    .step-body { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+
+    /* ── Form fields ──────────────────────────────────────── */
+    .field { display: flex; flex-direction: column; gap: 3px; }
+    .field label { font-size: 11px; font-weight: 600; color: var(--grey-4); text-transform: uppercase; letter-spacing: .4px; }
+
+    .field input, .field select {
+      border: 1px solid var(--grey-3);
+      border-radius: var(--radius);
+      padding: 6px 9px;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--yellow);
+      outline: none;
+      transition: border-color .15s;
+      width: 100%;
+    }
+    .field input:focus, .field select:focus { border-color: var(--blue); background: #fff; }
+    .field input::placeholder { color: var(--grey-3); }
+
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    /* ── Preview pill ─────────────────────────────────────── */
+    .preview {
+      font-size: 11px;
+      color: var(--blue);
+      background: #EBF3FB;
+      border-radius: 4px;
+      padding: 3px 7px;
+      min-height: 20px;
+      word-break: break-all;
+    }
+    .preview.error { color: #c00; background: #fff0f0; }
+
+    /* ── Auto-detected block ──────────────────────────────── */
+    .auto-row {
+      display: grid;
+      grid-template-columns: 60px 1fr;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 0;
+      border-bottom: 1px solid var(--grey-2);
+    }
+    .auto-row:last-child { border-bottom: none; }
+    .auto-label { font-size: 11px; font-weight: 700; color: var(--grey-4); }
+    .auto-val   { font-size: 12px; color: var(--text); }
+    .auto-val.found   { color: #1a7a3a; }
+    .auto-val.missing { color: #c00; font-style: italic; }
+
+    /* ── Folder browser ───────────────────────────────────── */
+    .folder-browser {
+      border: 1px solid var(--grey-3);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #fff;
+    }
+    .folder-breadcrumb {
+      background: var(--grey-2);
+      padding: 5px 9px;
+      font-size: 11px;
+      color: var(--grey-4);
+      border-bottom: 1px solid var(--grey-3);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .folder-list {
+      max-height: 140px;
+      overflow-y: auto;
+    }
+    .folder-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 10px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--grey-2);
+      font-size: 12px;
+      transition: background .1s;
+    }
+    .folder-item:last-child { border-bottom: none; }
+    .folder-item:hover { background: var(--grey-1); }
+    .folder-item.selected { background: #EBF3FB; color: var(--blue); font-weight: 600; }
+    .folder-item .fi { font-size: 14px; }
+    .folder-back { color: var(--blue); }
+    .folder-loading { padding: 12px; text-align: center; color: var(--grey-4); font-size: 12px; }
+    .folder-selected-path {
+      padding: 5px 9px;
+      font-size: 11px;
+      color: #1a7a3a;
+      background: #f0fff4;
+      border-top: 1px solid var(--grey-2);
+      font-weight: 600;
+    }
+
+    /* ── Settings row ─────────────────────────────────────── */
+    .setting-row {
+      display: grid;
+      grid-template-columns: 1fr 80px;
+      align-items: center;
+      gap: 8px;
+    }
+    .setting-row label { font-size: 12px; color: var(--text); }
+    .setting-row input, .setting-row select {
+      border: 1px solid var(--grey-3);
+      border-radius: var(--radius);
+      padding: 5px 8px;
+      font-size: 12px;
+      background: var(--yellow);
+      outline: none;
+      width: 100%;
+    }
+
+    /* ── Buttons ──────────────────────────────────────────── */
+    .btn {
+      border: none;
+      border-radius: var(--radius);
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      width: 100%;
+    }
+    .btn:active { transform: scale(.98); }
+    .btn-primary { background: var(--navy); color: #fff; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-secondary { background: var(--grey-2); color: var(--text); }
+    .btn-secondary:hover { background: var(--grey-3); }
+
+    /* ── Status / progress ────────────────────────────────── */
+    #status {
+      margin: 0 14px 14px;
+      border-radius: var(--radius);
+      padding: 9px 12px;
+      font-size: 12px;
+      display: none;
+    }
+    #status.info    { background: #EBF3FB; color: var(--navy); border: 1px solid var(--sky); }
+    #status.success { background: var(--green); color: #1a5c2a; border: 1px solid #9fd4b0; }
+    #status.error   { background: var(--red);   color: #8b0000; border: 1px solid #f5a0ac; }
+    #status.loading { background: var(--grey-2); color: var(--grey-4); border: 1px solid var(--grey-3); }
+
+    .spinner {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border: 2px solid var(--grey-3);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Auth section ─────────────────────────────────────── */
+    #auth-section {
+      margin: 14px;
+      background: #fff;
+      border: 1px solid var(--grey-2);
+      border-radius: var(--radius);
+      padding: 14px;
+      text-align: center;
+      display: none;
+    }
+    #auth-section p { font-size: 12px; color: var(--grey-4); margin-bottom: 10px; }
+
+    .link { color: var(--blue); text-decoration: underline; cursor: pointer; font-size: 11px; }
+
+    /* ── Success view ─────────────────────────────────────── */
+    #success-view {
+      display: none;
+      margin: 14px;
+      background: var(--green);
+      border: 1px solid #9fd4b0;
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+    }
+    #success-view .check { font-size: 28px; margin-bottom: 6px; }
+    #success-view h3 { font-size: 14px; color: #1a5c2a; margin-bottom: 4px; }
+    #success-view p  { font-size: 12px; color: #2a7a3a; margin-bottom: 10px; }
+    #open-file-btn   { background: #1a7a3a; color: #fff; border: none; border-radius: var(--radius); padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 6px; }
+    #another-btn     { background: transparent; border: 1px solid #1a7a3a; color: #1a7a3a; border-radius: var(--radius); padding: 7px 14px; font-size: 12px; cursor: pointer; width: 100%; }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-icon">🧪</div>
+  <div>
+    <h1>Kit Comp Generator</h1>
+    <p>Build kit comparison workbooks from your lot sheet</p>
+  </div>
+</div>
+
+<!-- Auth section (shown if not signed in to Graph) -->
+<div id="auth-section">
+  <p>Sign in with your Microsoft account to browse OneDrive folders and create workbooks.</p>
+  <button class="btn btn-primary" id="sign-in-btn">Sign in with Microsoft</button>
+</div>
+
+<!-- Main form -->
+<div id="main-form">
+  <div class="steps">
+
+    <!-- Step 1: Component rows -->
+    <div class="step">
+      <div class="step-header"><span class="step-num">1</span> Component Row Numbers</div>
+      <div class="step-body">
+        <p style="font-size:11px;color:var(--grey-4)">Enter the row number from the lot sheet for each kit component.</p>
+        <div class="field-row">
+          <div class="field">
+            <label>Conjugate / HRP</label>
+            <input type="number" id="row-hrp" placeholder="e.g. 5" min="1"/>
+          </div>
+          <div class="field">
+            <label>Positive Control</label>
+            <input type="number" id="row-pos" placeholder="e.g. 6" min="1"/>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Negative Control</label>
+            <input type="number" id="row-neg" placeholder="e.g. 7" min="1"/>
+          </div>
+          <div class="field">
+            <label>Calibrator</label>
+            <input type="number" id="row-cal" placeholder="e.g. 8" min="1"/>
+          </div>
+        </div>
+        <button class="btn btn-secondary" id="preview-btn" style="margin-top:2px">Preview Data</button>
+        <div id="preview-area" style="display:none;margin-top:4px">
+          <div class="field"><label>HRP</label><div class="preview" id="prev-hrp"></div></div>
+          <div class="field"><label>Pos Ctrl</label><div class="preview" id="prev-pos"></div></div>
+          <div class="field"><label>Neg Ctrl</label><div class="preview" id="prev-neg"></div></div>
+          <div class="field"><label>Calibrator</label><div class="preview" id="prev-cal"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Auto-detected -->
+    <div class="step">
+      <div class="step-header"><span class="step-num">2</span> Auto-Detected Components</div>
+      <div class="step-body">
+        <p style="font-size:11px;color:var(--grey-4)">Scanned automatically from the lot sheet — topmost match used.</p>
+        <button class="btn btn-secondary" id="scan-btn">Scan Sheet</button>
+        <div id="auto-area" style="display:none;margin-top:6px">
+          <div class="auto-row"><span class="auto-label">TMB</span><span class="auto-val" id="auto-tmb">—</span></div>
+          <div class="auto-row"><span class="auto-label">Wash</span><span class="auto-val" id="auto-wash">—</span></div>
+          <div class="auto-row"><span class="auto-label">Stop</span><span class="auto-val" id="auto-stop">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Save location -->
+    <div class="step">
+      <div class="step-header"><span class="step-num">3</span> Save Location</div>
+      <div class="step-body">
+        <p style="font-size:11px;color:var(--grey-4)">Browse your OneDrive to choose where to save the new workbook.</p>
+        <div class="folder-browser">
+          <div class="folder-breadcrumb" id="breadcrumb">OneDrive</div>
+          <div class="folder-list" id="folder-list">
+            <div class="folder-loading">Click "Load Folders" to browse OneDrive</div>
+          </div>
+          <div class="folder-selected-path" id="selected-path" style="display:none"></div>
+        </div>
+        <button class="btn btn-secondary" id="load-folders-btn" style="margin-top:4px">📂 Load Folders</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Settings -->
+    <div class="step">
+      <div class="step-header"><span class="step-num">4</span> Settings</div>
+      <div class="step-body">
+        <div class="setting-row">
+          <label>Number of Samples</label>
+          <input type="number" id="num-samples" value="12" min="1" max="96"/>
+        </div>
+        <div class="setting-row">
+          <label>Duplicate Controls?</label>
+          <select id="dup-controls">
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5: Generate -->
+    <div class="step">
+      <div class="step-header"><span class="step-num">5</span> Generate</div>
+      <div class="step-body">
+        <button class="btn btn-primary" id="generate-btn" disabled>Generate Kit Comp Workbook</button>
+        <p style="font-size:10px;color:var(--grey-4);text-align:center;margin-top:4px">A new .xlsx file will be created in your selected OneDrive folder</p>
+      </div>
+    </div>
+
+  </div><!-- /steps -->
+</div><!-- /main-form -->
+
+<!-- Status bar -->
+<div id="status"></div>
+
+<!-- Success view -->
+<div id="success-view">
+  <div class="check">✅</div>
+  <h3 id="success-title">Workbook Created!</h3>
+  <p id="success-msg">Your kit comp workbook has been saved to OneDrive.</p>
+  <button id="open-file-btn">Open in Excel</button>
+  <button id="another-btn">Generate Another</button>
+</div>
+
+</body>
+</html>
