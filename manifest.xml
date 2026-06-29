@@ -17,7 +17,8 @@
   </Hosts>
 
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://ltsamaan.github.io/kitcomp-addin/taskpane.html"/>
+    <!-- IMPORTANT: replace YOUR_GITHUB_USERNAME with your actual GitHub username -->
+    <SourceLocation DefaultValue="https://YOUR_GITHUB_USERNAME.github.io/kitcomp-addin/taskpane.html"/>
   </DefaultSettings>
 
   <Permissions>ReadWriteDocument</Permissions>
@@ -70,12 +71,12 @@
 
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon16"  DefaultValue="https://ltsamaan.github.io/kitcomp-addin/icon16.png"/>
-        <bt:Image id="Icon32"  DefaultValue="https://ltsamaan.github.io/kitcomp-addin/icon32.png"/>
-        <bt:Image id="Icon80"  DefaultValue="https://ltsamaan.github.io/kitcomp-addin/icon80.png"/>
+        <bt:Image id="Icon16"  DefaultValue="https://YOUR_GITHUB_USERNAME.github.io/kitcomp-addin/icon16.png"/>
+        <bt:Image id="Icon32"  DefaultValue="https://YOUR_GITHUB_USERNAME.github.io/kitcomp-addin/icon32.png"/>
+        <bt:Image id="Icon80"  DefaultValue="https://YOUR_GITHUB_USERNAME.github.io/kitcomp-addin/icon80.png"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="TaskpaneUrl" DefaultValue="https://ltsamaan.github.io/kitcomp-addin/taskpane.html"/>
+        <bt:Url id="TaskpaneUrl" DefaultValue="https://YOUR_GITHUB_USERNAME.github.io/kitcomp-addin/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GroupLabel"  DefaultValue="Kit Comp"/>
